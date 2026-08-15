@@ -1,0 +1,58 @@
+/* The orb host sits at the bottom of the shell overlay layer: behind every
+   interactive occupant (pointer-events off), painting one centered canvas.
+   The layer itself is z-20 with a stacking context, so -1 orders the host
+   under sibling overlay entries without escaping the layer. */
+.host {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+}
+
+/* Outcome washes: brief tinted radials behind the orb for a failed or a
+   cleanly completed turn; toggled by data-on with a 1s ease. */
+.wash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.wash[data-on] {
+  opacity: 1;
+}
+
+.washError {
+  background: radial-gradient(
+    70vmax 55vmax at 50% 46%,
+    color-mix(in srgb, var(--dsw-alias-state-error-primary) 16%, transparent),
+    transparent 68%
+  );
+}
+
+.washSettle {
+  background: radial-gradient(
+    70vmax 55vmax at 50% 46%,
+    color-mix(in srgb, var(--dsw-alias-state-success-primary) 13%, transparent),
+    transparent 68%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas {
+    opacity: 0.35;
+  }
+
+  .wash {
+    transition: none;
+  }
+}
