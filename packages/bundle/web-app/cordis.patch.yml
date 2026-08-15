@@ -84,6 +84,11 @@
     - id: session-stats
       name: '@deepseek-ai/dsh-session-stats'
 
+    # Live activity for the thinking-orb background (the orbActivity
+    # projection key): in-flight tool names, streaming bit, turn outcomes.
+    - id: orb-state
+      name: '@deepseek-ai/dsh-orb-state'
+
     # Resolve bind host, SSH launch, and display once at boot, then mount the
     # matching dual-face directory picker. Mount -native or -browse directly in
     # an overlay to pin the interaction.
@@ -179,6 +184,11 @@
 
     - id: ui-layout
       name: '@deepseek-ai/dsh-client-ui-layout'
+
+    # Thinking-orb background: the centered hero canvas over live session
+    # activity, registered under every other shell.overlay occupant.
+    - id: ui-orbs
+      name: '@deepseek-ai/dsh-client-ui-orbs'
 
     - id: ui-sidebar
       name: '@deepseek-ai/dsh-client-ui-sidebar'
