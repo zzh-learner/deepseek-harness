@@ -83,12 +83,14 @@ export function orbPhase(facts: OrbFacts, windows: OrbWindows): OrbPhase {
 
 /**
  * Animation speed multiplier from how much of the harness is concurrently
- * alive: one tick per running session, one more while tools dispatch.
+ * alive: one tick per running session, one more while tools dispatch. The
+ * curve is tuned to a meditative pace — roughly half the playground's
+ * reference tempo — so busyness still reads without agitation.
  * @param runningSessions - count of sessions whose running bit is set.
  * @param toolsOpen - whether the current session has tools in flight.
- * @returns the multiplier (1.12 idle baseline … 1.78 capped).
+ * @returns the multiplier (0.6 idle baseline … 0.9 capped).
  */
 export function orbSpeed(runningSessions: number, toolsOpen: boolean): number {
   const intensity = Math.min(4, Math.max(1, runningSessions) + (toolsOpen ? 1 : 0))
-  return 0.9 + 0.22 * intensity
+  return 0.5 + 0.1 * intensity
 }

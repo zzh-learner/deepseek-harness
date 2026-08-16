@@ -68,11 +68,11 @@ describe('orbPhase', () => {
 })
 
 describe('orbSpeed', () => {
-  it('climbs with concurrent liveness and caps at four ticks', () => {
-    expect(orbSpeed(1, false)).toBeCloseTo(1.12)
-    expect(orbSpeed(2, false)).toBeCloseTo(1.34)
-    expect(orbSpeed(1, true)).toBeCloseTo(1.34)
-    expect(orbSpeed(3, true)).toBeCloseTo(1.78)
-    expect(orbSpeed(9, true)).toBeCloseTo(1.78)
+  it('climbs gently with concurrent liveness on the meditative curve and caps at four ticks', () => {
+    expect(orbSpeed(1, false)).toBeCloseTo(0.6)
+    expect(orbSpeed(2, false)).toBeCloseTo(0.7)
+    expect(orbSpeed(1, true)).toBeCloseTo(0.7)
+    expect(orbSpeed(3, true)).toBeCloseTo(0.9)
+    expect(orbSpeed(9, true)).toBeCloseTo(0.9)
   })
 })
