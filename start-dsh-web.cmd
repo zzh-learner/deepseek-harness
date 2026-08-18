@@ -13,6 +13,11 @@ set "URL=http://%HOST%:%PORT%"
 
 cd /d "%~dp0" || (echo Cannot enter "%~dp0" & exit /b 1)
 
+rem Ensure the Hindsight memory daemon (127.0.0.1:9077) is up - dsh never
+rem auto-starts it. daemon-start.js is idempotent (it exits when a healthy
+rem daemon already listens) and inherits the user-level HINDSIGHT_* env vars.
+powershell -NoProfile -Command "$up=$false; $c=New-Object Net.Sockets.TcpClient; try{ $t=$c.ConnectAsync('127.0.0.1',9077); if($t.Wait(300) -and $c.Connected){$up=$true} }catch{}; $c.Close(); if($up){ echo 'hindsight daemon already up' } else { echo 'Starting hindsight daemon...'; Start-Process node -ArgumentList (Join-Path $env:USERPROFILE '.hindsight\coding-agents\dist\daemon-start.js'),'--harness','dsh' -WindowStyle Hidden }"
+
 rem Already running? Just open the browser.
 powershell -NoProfile -Command "exit [int](!(New-Object Net.Sockets.TcpClient).ConnectAsync('%HOST%',%PORT%).Wait(300))" >nul 2>&1
 if not errorlevel 1 (

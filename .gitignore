@@ -38,3 +38,6 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+launcher/bin/
+launcher/obj/
+launcher/dist/

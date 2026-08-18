@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    DSH desktop launcher: a Windows tray exe that starts/stops/restarts the
+    "pnpm dsh web" server (127.0.0.1:3080) together with the Hindsight memory
+    daemon (127.0.0.1:9077). Framework-dependent single-file publish; see
+    launcher/README.md. Not part of the pnpm workspace.
+  -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DshLauncher</AssemblyName>
+    <RootNamespace>DshLauncher</RootNamespace>
+    <ApplicationIcon>assets/app.ico</ApplicationIcon>
+    <Version>0.1.0</Version>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>
