@@ -71,6 +71,8 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/client/runtime': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/client/ui-layout': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/client/ui-orbs': { kind: 'none', reason: 'Browser-side ambient animation over already-derived client state; registers nothing model-facing.' },
+  'packages/client/ui-wallpaper': { kind: 'none', reason: 'Browser-side wallpaper registry and selection page; registers nothing model-facing.' },
+  'packages/client/ui-blackhole': { kind: 'none', reason: 'Browser-side ambient WebGL2 rendering over page-local state; registers nothing model-facing.' },
   'packages/client/ui-sidebar': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/client/ui-conversation': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/client/ui-message-feedback': { kind: 'none', reason: 'Browser-side controls over the message-feedback sidecar; ratings and notes never enter the Session log, model context, or telemetry.' },

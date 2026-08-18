@@ -1,0 +1,218 @@
+/* The orbs control panel: a right-hand glass column mirroring the blackhole
+   wallpaper's panel chrome, with the shell theme's accent instead of the
+   ember orange. The host layer is click-through, so the panel opts back into
+   pointer events; collapse slides the panel out and reveals the reopen pill. */
+.panel {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: 272px;
+  z-index: 2;
+  pointer-events: auto;
+  background: rgba(10, 13, 20, 0.62);
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px 16px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #e8ecf4;
+  text-align: left;
+  font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+}
+
+.panel[data-collapsed] {
+  transform: translateX(calc(100% + 22px));
+}
+
+.panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+}
+
+.toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #9aa3b5;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+
+.toggle:hover {
+  color: #8fd0ff;
+  border-color: rgba(143, 208, 255, 0.8);
+}
+
+.open {
+  display: none;
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  pointer-events: auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(10, 13, 20, 0.62);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #9aa3b5;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+}
+
+.open[data-show] {
+  display: block;
+}
+
+.open:hover {
+  color: #8fd0ff;
+  border-color: rgba(143, 208, 255, 0.8);
+}
+
+.head h1 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  color: #e8ecf4;
+  margin: 0;
+}
+
+.sub {
+  font-size: 11px;
+  color: #9aa3b5;
+  letter-spacing: 0.14em;
+  margin: 4px 0 0;
+}
+
+.sec {
+  margin-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 11px;
+}
+
+.sec h2 {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: rgba(143, 208, 255, 0.8);
+  margin: 0 0 9px;
+}
+
+.row {
+  margin-bottom: 10px;
+}
+
+.labline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+  color: #9aa3b5;
+  margin-bottom: 5px;
+}
+
+.val {
+  color: #8fd0ff;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+
+.select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: #141926;
+  color: #e8ecf4;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.panel input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  background: linear-gradient(90deg, rgba(143, 208, 255, 0.4), rgba(255, 255, 255, 0.14));
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.panel input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #9fd6ff;
+  box-shadow: 0 0 8px rgba(143, 208, 255, 0.65);
+  cursor: pointer;
+}
+
+.panel input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: #9fd6ff;
+  box-shadow: 0 0 8px rgba(143, 208, 255, 0.65);
+  cursor: pointer;
+}
+
+.checkline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mini {
+  padding: 5px 12px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8ecf4;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mini:hover {
+  color: #8fd0ff;
+  border-color: rgba(143, 208, 255, 0.8);
+}
+
+.foot {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  color: #9aa3b5;
+  line-height: 1.7;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    width: min(280px, 82vw);
+  }
+}

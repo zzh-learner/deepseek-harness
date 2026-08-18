@@ -34,7 +34,7 @@ function mount(tracks: string | undefined, rect: { left: number; width: number }
       y: 0,
       toJSON: () => ({}),
     }
-    frame.getBoundingClientRect = () => asRect as DOMRect
+    frame.getBoundingClientRect = () => asRect
     cleanupFns.push(() => { delete (frame as { getBoundingClientRect?: unknown }).getBoundingClientRect })
   }
   const overlay = document.createElement('div')

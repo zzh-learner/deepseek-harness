@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-orb-state",
   "description": "Live activity projection (orbActivity) for the DeepSeek Harness thinking-orb surface: in-flight tool names, streaming bit, and turn outcomes folded from the session log",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.7",
   "publishConfig": {
     "access": "public"
   },

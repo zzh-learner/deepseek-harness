@@ -186,9 +186,21 @@
       name: '@deepseek-ai/dsh-client-ui-layout'
 
     # Thinking-orb background: the centered hero canvas over live session
-    # activity, registered under every other shell.overlay occupant.
+    # activity, registered under every other shell.overlay occupant. Depends
+    # on ui-wallpaper below (wallpaper.registry): it registers itself as a
+    # selectable wallpaper and pauses while not selected.
     - id: ui-orbs
       name: '@deepseek-ai/dsh-client-ui-orbs'
+
+    # Wallpaper registry: provides wallpaper.registry plus the Settings
+    # 「壁纸」 section; wallpapers (ui-orbs, ui-blackhole) inject the service.
+    - id: ui-wallpaper
+      name: '@deepseek-ai/dsh-client-ui-wallpaper'
+
+    # GARGANTUA black-hole wallpaper: WebGL2 geodesic ray tracer as a
+    # translucent background layer with its own control panel.
+    - id: ui-blackhole
+      name: '@deepseek-ai/dsh-client-ui-blackhole'
 
     - id: ui-sidebar
       name: '@deepseek-ai/dsh-client-ui-sidebar'

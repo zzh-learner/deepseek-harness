@@ -196,7 +196,7 @@ describe('OrbBackdrop', () => {
   it('mounts nothing when the canvas has no 2D context', () => {
     Object.defineProperty(HTMLCanvasElement.prototype, 'clientWidth', { configurable: true, value: 1200 })
     Object.defineProperty(HTMLCanvasElement.prototype, 'clientHeight', { configurable: true, value: 800 })
-    HTMLCanvasElement.prototype.getContext = vi.fn(() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => null)
 
     const host = render(<OrbBackdrop {...backdropProps({ byId: {} })} />)
     // The component still renders its host; the loop never starts.
@@ -348,7 +348,7 @@ describe('OrbBackdrop', () => {
     const resizeCallbacks: (() => void)[] = []
     vi.stubGlobal('ResizeObserver', class {
       constructor(cb: () => void) { resizeCallbacks.push(cb) }
-      observe(el: unknown): void { observed.push(this as never) ; void el }
+      observe(el: unknown): void { observed.push(this) ; void el }
       disconnect(): void {}
     })
 
