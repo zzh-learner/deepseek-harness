@@ -1,8 +1,10 @@
 # End-to-end stop test for DshLauncher against throwaway ports, so the live
 # dsh web / hindsight daemon are never touched. Builds a mimic of the real
 # "pwsh -> node(pnpm) -> cmd(shim) -> node(server)" chain listening on a dummy
-# port, runs "DshLauncher.exe --stop" with an exe-adjacent temp config, and
-# asserts: port freed, chain processes gone, the hosting shell alive.
+# port, runs "DshLauncher.exe --stop" with an exe-adjacent temp config (logDir
+# redirected into the temp copy), and asserts: port freed, chain processes
+# gone, the hosting shell alive, and a remembered pid for a still-booting
+# chain with no listener yet is killed and its pid file consumed.
 # Usage: pwsh -File launcher/tests/stop-cycle.test.ps1 [-Exe <path>] [-Port <n>]
 param(
     [string]$Exe = (Join-Path $PSScriptRoot '..\dist\DshLauncher.exe'),
@@ -60,8 +62,10 @@ Copy-Item $Exe (Join-Path $iso 'DshLauncher.exe')
     repoPath   = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
     webPort    = $Port
     daemonPort = $Port + 1
+    logDir     = Join-Path $iso 'logs'
     autoOpenBrowser = $false
 } | ConvertTo-Json | Set-Content -Path (Join-Path $iso 'dsh-launcher.json')
+New-Item -ItemType Directory -Path (Join-Path $iso 'logs') | Out-Null
 $isoExe = Join-Path $iso 'DshLauncher.exe'
 $shellPid = $PID
 
@@ -82,7 +86,24 @@ Write-Host '4. idempotent second stop'
 & $isoExe --stop | ForEach-Object { Write-Host "  $_" }
 Assert ($LASTEXITCODE -eq 0) "second --stop also exits 0"
 
-Write-Host '5. --status against the temp config'
+Write-Host '5. remembered starting chain (no listener yet) is killed'
+$childJs = Join-Path $work 'sleep.js'
+Set-Content -Path $childJs -Value 'setInterval(() => {}, 1e6);'
+$chainJs = Join-Path $work 'chain.js'
+Set-Content -Path $chainJs -Value "const { spawn } = require('child_process'); spawn(process.execPath, [process.argv[2]], { stdio: 'inherit' }); setInterval(() => {}, 1e6);"
+$startingTop = Start-Process node -ArgumentList $chainJs, $childJs -WindowStyle Hidden -PassThru
+Start-Sleep -Seconds 1
+$child = Get-CimInstance Win32_Process -Filter "ParentProcessId = $($startingTop.Id)" | Select-Object -First 1
+Assert ($null -ne $child) "starting chain child exists (pid $($child.ProcessId))"
+$startTicks = $startingTop.StartTime.ToFileTime()
+Set-Content -Path (Join-Path (Join-Path $iso 'logs') 'daemon.pid') -Value "$($startingTop.Id)|$startTicks|node"
+& $isoExe --stop | ForEach-Object { Write-Host "  $_" }
+Assert ($LASTEXITCODE -eq 0) "--stop exits 0 with a remembered no-listener chain"
+Assert ($null -eq (Get-Process -Id $startingTop.Id -ErrorAction SilentlyContinue)) "remembered starting chain root (pid $($startingTop.Id)) is gone"
+Assert ($null -eq (Get-Process -Id $child.ProcessId -ErrorAction SilentlyContinue)) "starting chain child (pid $($child.ProcessId)) is gone"
+Assert (-not (Test-Path (Join-Path (Join-Path $iso 'logs') 'daemon.pid'))) "daemon.pid is consumed by stop"
+
+Write-Host '6. --status against the temp config'
 & $isoExe --status | ForEach-Object { Write-Host "  $_" }
 Assert ($LASTEXITCODE -eq 1) "--status exits 1 while both components are down"
 

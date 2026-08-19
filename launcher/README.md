@@ -15,7 +15,9 @@ Not part of the pnpm workspace: plain C# WinForms (`net9.0-windows`), built with
 
 State is tracked by listening ports (IPv4 `GetExtendedTcpTable`), so the launcher also manages servers it did not spawn — including the window left behind by start-dsh-web.cmd.
 
-**Stop semantics:** Stop kills both components. The kill root is the topmost ancestor in the component's pipeline (node/cmd for web, uv/uvx/python for the daemon), removed with `taskkill /T /F`; hosting shells (pwsh, Windows Terminal, interactive cmd) are never in the chain and survive.
+**Stop semantics:** Stop kills both components. The kill root is the topmost ancestor in the component's pipeline (node/cmd for web, uv/uvx/python for the daemon), removed with `taskkill /T /F`; hosting shells (pwsh, Windows Terminal, interactive cmd) are never in the chain and survive. Chains that are still booting — for example a daemon whose uvx resolution is downloading dependencies and has no listener yet — are found through pid files (`web.pid`, `daemon.pid` under the log dir, written on spawn and validated against process name and start time before a kill), so Stop and Restart do not leave starting chains behind, and a new Start kills a remembered one instead of racing it.
+
+**Daemon start budget:** the daemon wait defaults to 300 s and is forwarded to the bootstrap as `HINDSIGHT_EMBED_DAEMON_STARTUP_TIMEOUT` (the embed CLI's own budget, default 180 s) and `UV_LOCK_TIMEOUT`, so a cold start that resolves fresh `claude-agent-sdk`/`botocore` wheels (~100 MB) is governed by one number (`daemonStartTimeoutSeconds` in `dsh-launcher.json`) instead of three independent timeouts firing mid-download.
 
 **Exit semantics:** quitting the launcher (Exit menu) leaves both services running; Stop is the only path that stops them.
 
@@ -60,7 +62,7 @@ The single-file, framework-dependent exe lands in `launcher/dist/DshLauncher.exe
 }
 ```
 
-(`~/.dsh/launcher.json` works too; the exe-adjacent file wins. All keys are optional.)
+(`~/.dsh/launcher.json` works too; the exe-adjacent file wins. All keys are optional. Also overridable: `host`, `webStartTimeoutSeconds` (default 120), `daemonStartTimeoutSeconds` (default 300), `logDir` — normally only tests redirect it.)
 
 ## Test
 
@@ -68,7 +70,7 @@ The single-file, framework-dependent exe lands in `launcher/dist/DshLauncher.exe
 pwsh -File launcher/tests/stop-cycle.test.ps1
 ```
 
-Builds a mimic `node -> cmd shim -> node` chain on a throwaway port and asserts the stop cycle: port freed, chain gone, hosting shell alive, idempotent second stop, correct `--status` exit codes. The live services on 3080/9077 are never touched.
+Builds a mimic `node -> cmd shim -> node` chain on a throwaway port and asserts the stop cycle: port freed, chain gone, hosting shell alive, idempotent second stop, a remembered still-booting chain (no listener) killed with its pid file consumed, correct `--status` exit codes. The live services on 3080/9077 and the real `~/.dsh/launcher` are never touched (the temp config redirects `logDir`).
 
 ## Regenerate the icon
 

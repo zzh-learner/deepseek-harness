@@ -15,7 +15,9 @@ DeepSeek Harness Web UI 的 Windows 桌面启动器（托盘 exe）。它用常�
 
 状态通过监听端口跟踪（IPv4 `GetExtendedTcpTable`），因此启动器也能管理不是它拉起的服务器——包括 start-dsh-web.cmd 留下的窗口。
 
-**停止语义：** Stop 会杀掉两个组件。kill root 是组件流水线的最顶层祖先（web 是 node/cmd，daemon 是 uv/uvx/python），用 `taskkill /T /F` 移除；宿主 shell（pwsh、Windows Terminal、交互式 cmd）永远不在链内，得以存活。
+**停止语义：** Stop 会杀掉两个组件。kill root 是组件流水线的最顶层祖先（web 是 node/cmd，daemon 是 uv/uvx/python），用 `taskkill /T /F` 移除；宿主 shell（pwsh、Windows Terminal、交互式 cmd）永远不在链内，得以存活。仍在启动中的链——例如 daemon 的 uvx 解析正在下载依赖、尚无监听端口——通过 pid 文件定位（日志目录下的 `web.pid`、`daemon.pid`，spawn 时写入，杀前按进程名与启动时间校验，防 PID 复用），因此 Stop/Restart 不会漏掉启动中的链；新的 Start 也会先清掉记忆中的旧链，而不是与之并发竞争。
+
+**daemon 启动预算：** daemon 等待默认 300 秒，并作为 `HINDSIGHT_EMBED_DAEMON_STARTUP_TIMEOUT`（embed CLI 自身的预算，默认 180 秒）与 `UV_LOCK_TIMEOUT` 传给 bootstrap——冷启动解析新的 `claude-agent-sdk`/`botocore` wheel（约 100 MB）时，由 `dsh-launcher.json` 的 `daemonStartTimeoutSeconds` 一个数字统一管辖，而不是三层独立超时在下载中途各自放弃。
 
 **退出语义：** 退出启动器（Exit 菜单）不停止服务；Stop 是唯一的停止路径。
 
@@ -62,7 +64,7 @@ pwsh -File launcher/build.ps1
 }
 ```
 
-（`~/.dsh/launcher.json` 也有效；exe 旁的文件优先。所有键均可省略。）
+（`~/.dsh/launcher.json` 也有效；exe 旁的文件优先。所有键均可省略。其他可覆盖键：`host`、`webStartTimeoutSeconds`（默认 120）、`daemonStartTimeoutSeconds`（默认 300）、`logDir`——通常只有测试会重定向它。）
 
 ## 测试
 
@@ -70,7 +72,7 @@ pwsh -File launcher/build.ps1
 pwsh -File launcher/tests/stop-cycle.test.ps1
 ```
 
-在一次性端口上构造模拟的 `node -> cmd shim -> node` 链，并断言停止周期：端口释放、链内进程消失、宿主 shell 存活、二次停止幂等、`--status` 退出码正确。3080/9077 上的在线服务不受影响。
+在一次性端口上构造模拟的 `node -> cmd shim -> node` 链，并断言停止周期：端口释放、链内进程消失、宿主 shell 存活、二次停止幂等、记忆中无监听的启动链被连带杀掉且 pid 文件被消费、`--status` 退出码正确。3080/9077 上的在线服务与真实的 `~/.dsh/launcher` 不受影响（临时配置重定向了 `logDir`）。
 
 ## 重新生成图标
 

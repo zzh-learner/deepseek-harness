@@ -37,7 +37,10 @@ public sealed class ProcessService(LauncherConfig config)
 {
     private readonly object _busyLock = new();
     private bool _busy;
+    // Held (not disposed) for the process lifetime: a disposed Process stops
+    // raising Output/Error/Exited, which would silently kill the log pump.
     private Process? _webProcess;
+    private Process? _daemonProcess;
 
     /// <summary>Raised once when a start/stop/restart sequence finishes; consumers re-query status.</summary>
     public event Action? StateChanged;
@@ -128,8 +131,14 @@ public sealed class ProcessService(LauncherConfig config)
             var details = new List<string>();
             var webStopped = await StopComponentAsync(config.WebPort, "dsh web", WebChainNames, details, cancellation);
             var daemonStopped = await StopComponentAsync(config.DaemonPort, "hindsight daemon", DaemonChainNames, details, cancellation);
+            // Port-based stop misses chains that are still booting (installing
+            // dependencies, no listener yet); the remembered pids cover those.
+            KillRemembered(config.WebPidFile, "dsh web start chain", details);
+            KillRemembered(config.DaemonPidFile, "hindsight daemon bootstrap", details);
             _webProcess?.Dispose();
             _webProcess = null;
+            _daemonProcess?.Dispose();
+            _daemonProcess = null;
 
             var success = webStopped && daemonStopped;
             var summary = success
@@ -181,21 +190,35 @@ public sealed class ProcessService(LauncherConfig config)
             return false;
         }
 
-        Directory.CreateDirectory(LauncherConfig.LogDir);
+        // A previous start may still be mid-boot (downloading uvx dependencies,
+        // no listener yet); two concurrent bootstraps fight over the uv cache
+        // lock and leave detached daemons behind, so kill the old chain first.
+        KillRemembered(config.DaemonPidFile, "hindsight daemon bootstrap", details);
+
+        Directory.CreateDirectory(config.LogDir);
         var psi = new ProcessStartInfo
         {
             FileName = "node",
             UseShellExecute = false,
             CreateNoWindow = true,
-            WorkingDirectory = LauncherConfig.LogDir,
+            WorkingDirectory = config.LogDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
         psi.ArgumentList.Add(LauncherConfig.DaemonStartScript);
         psi.ArgumentList.Add("--harness");
         psi.ArgumentList.Add("dsh");
+        var budget = config.DaemonStartTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        // The embed CLI's own startup budget (default 180s) and uv's cache-lock
+        // wait must fit inside the launcher's port wait, or an in-flight
+        // dependency download is abandoned mid-flight while still holding locks.
+        psi.Environment["HINDSIGHT_EMBED_DAEMON_STARTUP_TIMEOUT"] = budget;
+        psi.Environment["UV_LOCK_TIMEOUT"] = budget;
 
-        using var process = Process.Start(psi)!;
+        var process = Process.Start(psi)!;
+        _daemonProcess?.Dispose();
+        _daemonProcess = process;
+        RememberSpawned(process, config.DaemonPidFile);
         PumpOutput(process, config.DaemonLogPath);
         details.Add($"spawned daemon bootstrap (pid {process.Id}) -> {config.DaemonLogPath}");
 
@@ -216,7 +239,10 @@ public sealed class ProcessService(LauncherConfig config)
             return false;
         }
 
-        Directory.CreateDirectory(LauncherConfig.LogDir);
+        Directory.CreateDirectory(config.LogDir);
+        // Symmetric with the daemon: a previous start still inside pnpm
+        // install (no listener yet) is killed instead of racing a second chain.
+        KillRemembered(config.WebPidFile, "dsh web start chain", details);
         // pwsh runs with the profile (no -NoProfile): pnpm resolves through the
         // fnm setup the profile performs. The repo path is single-quoted for
         // pwsh, with embedded single quotes doubled per pwsh literal rules.
@@ -237,6 +263,7 @@ public sealed class ProcessService(LauncherConfig config)
         var process = Process.Start(psi)!;
         _webProcess?.Dispose();
         _webProcess = process;
+        RememberSpawned(process, config.WebPidFile);
         PumpOutput(process, config.WebLogPath);
         details.Add($"spawned pnpm dsh web (pid {process.Id}) in {config.RepoPath} -> {config.WebLogPath}");
 
@@ -355,6 +382,86 @@ public sealed class ProcessService(LauncherConfig config)
         }
 
         return taskKill.ExitCode == 0;
+    }
+
+    /// <summary>Persist "pid|start-time|process-name" to <paramref name="pidFile"/> so any launcher process (tray or headless verb) can later kill a still-booting chain that has no listener yet.</summary>
+    private static void RememberSpawned(Process process, string pidFile)
+    {
+        try
+        {
+            File.WriteAllText(pidFile,
+                $"{process.Id}|{process.StartTime.ToFileTime()}|{process.ProcessName.ToLowerInvariant()}");
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Start time not queryable; stop stays port-based for this chain.
+        }
+        catch (IOException)
+        {
+            // Pid file unwritable; stop stays port-based for this chain.
+        }
+    }
+
+    /// <summary>
+    /// Kill the chain root recorded in <paramref name="pidFile"/>, then remove
+    /// the file. No-ops when the file is absent, the recorded process is gone,
+    /// or Windows reused the pid for a different process (name or start-time
+    /// mismatch).
+    /// </summary>
+    private static void KillRemembered(string pidFile, string name, List<string> details)
+    {
+        string record;
+        try
+        {
+            // TrimEnd: writers may append a newline (Set-Content, shell loops).
+            record = File.ReadAllText(pidFile).TrimEnd();
+        }
+        catch (IOException)
+        {
+            // Absent or unreadable now; a later stop retries an unreadable file.
+            return;
+        }
+
+        try
+        {
+            File.Delete(pidFile);
+        }
+        catch (IOException)
+        {
+            // Best-effort delete; a stale record fails the identity check below.
+        }
+
+        var parts = record.Split('|');
+        if (parts.Length != 3
+            || !int.TryParse(parts[0], out var pid)
+            || !long.TryParse(parts[1], out var startedAt)
+            || parts[2].Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            if (process.ProcessName.ToLowerInvariant() != parts[2]
+                || process.StartTime.ToFileTime() != startedAt)
+            {
+                return;
+            }
+
+            if (RunTaskKill(pid, details, $"{name} (starting)"))
+            {
+                details.Add($"killed remembered {name} (pid {pid}); it had no listener yet");
+            }
+        }
+        catch (ArgumentException)
+        {
+            // The recorded process already exited.
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Access denied; port-based stop remains the fallback for it.
+        }
     }
 
     /// <summary>Pump redirected stdout/stderr of <paramref name="process"/> into <paramref name="logPath"/>, rotating past 8 MB.</summary>
@@ -496,7 +603,7 @@ public sealed class ProcessService(LauncherConfig config)
     {
         try
         {
-            Directory.CreateDirectory(LauncherConfig.LogDir);
+            Directory.CreateDirectory(config.LogDir);
             File.AppendAllText(config.LauncherLogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}\n");
         }
         catch (IOException)

@@ -47,6 +47,7 @@ internal static class Program
         var service = new ProcessService(config);
         using var app = new TrayApp(config, service);
         using var watcher = new ThreadPoolWatcher(() => app.ShowPanel(), ShowPanelEventName);
+        app.ExitRequested += Application.Exit;
         Application.Run();
         return 0;
     }

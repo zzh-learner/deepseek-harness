@@ -88,12 +88,12 @@ public sealed class LogViewer : Form
 
     private void OpenFolder()
     {
-        if (_config is null || !Directory.Exists(LauncherConfig.LogDir))
+        if (_config is null || !Directory.Exists(_config.LogDir))
         {
             return;
         }
 
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(LauncherConfig.LogDir)
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_config.LogDir)
         {
             UseShellExecute = true,
         });
