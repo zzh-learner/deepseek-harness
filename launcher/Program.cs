@@ -45,6 +45,12 @@ internal static class Program
 
         var config = LauncherConfig.Load();
         var service = new ProcessService(config);
+        // The default UI-thread failure path opens the WinForms error dialog,
+        // which itself allocates GDI objects and can throw again while the
+        // process is already failing; logging keeps the tray resident.
+        Application.ThreadException += (_, e) => service.Log($"unhandled UI-thread exception: {e.Exception}");
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            service.Log($"unhandled exception on a non-UI thread; the process will exit: {e.ExceptionObject}");
         using var app = new TrayApp(config, service);
         using var watcher = new ThreadPoolWatcher(() => app.ShowPanel(), ShowPanelEventName);
         app.ExitRequested += Application.Exit;

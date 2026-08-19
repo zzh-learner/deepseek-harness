@@ -28,7 +28,9 @@ public sealed class TrayApp : IDisposable
     private readonly LogViewer _logViewer;
     private readonly List<IDisposable> _owned = [];
     private Icon? _currentIcon;
-    private ServiceStatus _lastStatus = new(ComponentState.Stopped, ComponentState.Stopped, null, null);
+    // Null until the first poll so the opening status always draws an icon;
+    // afterwards the last observed status, and an equal status skips the redraw.
+    private ServiceStatus? _lastStatus;
     private bool _suppressTransitionBubble;
 
     public TrayApp(LauncherConfig config, ProcessService service)
@@ -151,12 +153,14 @@ public sealed class TrayApp : IDisposable
     private void Poll()
     {
         var status = _service.QueryStatus();
-        UpdateIcon(status);
         UpdateMenu(status);
         _panel.UpdateStatus(status);
-        if (!status.Equals(_lastStatus))
+        if (_lastStatus is null || !status.Equals(_lastStatus))
         {
-            var wentDown = _lastStatus.Web == ComponentState.Running && status.Web != ComponentState.Running;
+            // Redrawn only on a status change: every draw allocates GDI
+            // objects, and a fixed 3 s cadence drains the per-process quota.
+            UpdateIcon(status);
+            var wentDown = _lastStatus?.Web == ComponentState.Running && status.Web != ComponentState.Running;
             if (wentDown && !_suppressTransitionBubble && !_service.Busy)
             {
                 Bubble("dsh web went down");
@@ -216,7 +220,19 @@ public sealed class TrayApp : IDisposable
             g.DrawEllipse(ring, 19, 19, 11, 11);
         }
 
-        return Icon.FromHandle(bitmap.GetHicon());
+        // Icon.FromHandle wraps the HICON without owning it, so the wrapper's
+        // Dispose never releases the handle; the clone owns a private copy and
+        // the original is destroyed here. A leaked HICON per draw drains the
+        // process GDI/USER quota.
+        var handle = bitmap.GetHicon();
+        try
+        {
+            return (Icon)Icon.FromHandle(handle).Clone();
+        }
+        finally
+        {
+            NativeMethods.SafeDestroyIcon(handle);
+        }
     }
 
     private void Bubble(string message, bool error = false, bool tooltip = true)
