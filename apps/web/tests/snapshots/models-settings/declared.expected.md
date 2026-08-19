@@ -10,9 +10,6 @@
     - button "插件":
       - img
       - text: 插件
-    - button "壁纸":
-      - img
-      - text: 壁纸
     - button "Agent 预设":
       - img
       - text: Agent 预设

@@ -3034,7 +3034,6 @@ export interface Config {
 - `@deepseek-ai/dsh-client-modules` — 需要 `webServer` · `loader`（[`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts)）
 - `@deepseek-ai/dsh-client-runtime`（[`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-agent-preset`（[`packages/client/ui-agent-preset/src/index.ts`](../packages/client/ui-agent-preset/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-blackhole`（[`packages/client/ui-blackhole/src/index.ts`](../packages/client/ui-blackhole/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-commands`（[`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-conversation`（[`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-cordis`（[`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts)）
@@ -3047,7 +3046,6 @@ export interface Config {
 - `@deepseek-ai/dsh-client-ui-layout`（[`packages/client/ui-layout/src/index.ts`](../packages/client/ui-layout/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-message-feedback`（[`packages/client/ui-message-feedback/src/index.ts`](../packages/client/ui-message-feedback/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-model-selection`（[`packages/client/ui-model-selection/src/index.ts`](../packages/client/ui-model-selection/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-orbs`（[`packages/client/ui-orbs/src/index.ts`](../packages/client/ui-orbs/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-permission-presets`（[`packages/client/ui-permission-presets/src/index.ts`](../packages/client/ui-permission-presets/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-plan`（[`packages/client/ui-plan/src/index.ts`](../packages/client/ui-plan/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-settings`（[`packages/client/ui-settings/src/index.ts`](../packages/client/ui-settings/src/index.ts)）
@@ -3062,7 +3060,6 @@ export interface Config {
 - `@deepseek-ai/dsh-client-ui-tool`（[`packages/client/ui-tool/src/index.ts`](../packages/client/ui-tool/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-trajectory`（[`packages/client/ui-trajectory/src/index.ts`](../packages/client/ui-trajectory/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-user-questions`（[`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts)）
-- `@deepseek-ai/dsh-client-ui-wallpaper`（[`packages/client/ui-wallpaper/src/index.ts`](../packages/client/ui-wallpaper/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-workflow-run`（[`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-workspace`（[`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts)）
 - `@deepseek-ai/dsh-command-compact` — 需要 `commands` · `compact`（[`packages/compaction/command-compact/src/index.ts`](../packages/compaction/command-compact/src/index.ts)）
@@ -3078,7 +3075,6 @@ export interface Config {
 - `@deepseek-ai/dsh-host-plugin-inventory` — 需要 `loader`（[`packages/host/plugin-inventory/src/index.ts`](../packages/host/plugin-inventory/src/index.ts)）
 - `@deepseek-ai/dsh-llm`（[`packages/llm/llm/src/index.ts`](../packages/llm/llm/src/index.ts)）
 - `@deepseek-ai/dsh-lsp`（[`packages/lsp/lsp/src/index.ts`](../packages/lsp/lsp/src/index.ts)）
-- `@deepseek-ai/dsh-orb-state` — 需要 `sessionProjections`（[`packages/session/orb-state/src/index.ts`](../packages/session/orb-state/src/index.ts)）
 - `@deepseek-ai/dsh-schedule` — 需要 `agents` · `sessions` · `tools` · `sessionPersistence`（[`packages/schedule/schedule/src/index.ts`](../packages/schedule/schedule/src/index.ts)）
 - `@deepseek-ai/dsh-session`（[`packages/core/session/src/index.ts`](../packages/core/session/src/index.ts)）
 - `@deepseek-ai/dsh-session-checkpoint-policy` — 需要 `llm` · `sessionPersistence` · `sessions` · `tools`（[`packages/session/session-checkpoint-policy/src/index.ts`](../packages/session/session-checkpoint-policy/src/index.ts)）
